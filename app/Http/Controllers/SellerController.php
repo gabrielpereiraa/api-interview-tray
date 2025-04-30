@@ -3,33 +3,78 @@
 namespace App\Http\Controllers;
 
 use App\Models\Seller;
+use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class SellerController extends Controller
 {
+    protected array $rules = [
+        'name' => 'required|string',
+        'email' => 'required|string|email|unique:sellers',
+        'created_by' => 'required|exists:users,id',
+    ];
+
     public function create(Request $request)
     {
-        return response()->noContent(Response::HTTP_OK);
+        try {
+            $adm = User::where('role', 1)->first(); //temp
+
+            $request->merge(['created_by' => $adm->id]);
+            $validatedData = $request->validate($this->rules);
+
+            $createdSeller = Seller::create($validatedData);
+            return response(['seller' => $createdSeller], Response::HTTP_CREATED);
+        } catch (ValidationException $e) {
+            return response()->noContent(Response::HTTP_BAD_REQUEST);
+        } catch (Exception $e) {
+            var_dump($e->getMessage());
+            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function index()
     {
-        return response()->noContent(Response::HTTP_OK);
+        $allSellers = Seller::all();
+        return response(['sellers' => $allSellers], Response::HTTP_OK);
+    }
+
+    public function indexByUser(User $user)
+    {
+        $allSellers = $user->sellers()->get();
+        return response(['sellers' => $allSellers], Response::HTTP_OK);
     }
 
     public function show(Seller $seller)
     {
-        return response()->noContent(Response::HTTP_OK);
+        return response(['seller' => $seller], Response::HTTP_OK);
     }
 
     public function update(Request $request, Seller $seller)
     {
-        return response()->noContent(Response::HTTP_OK);
+        try {
+            unset($this->rules['created_by']);
+            $validatedData = $request->validate($this->rules);
+            $seller->update($validatedData);
+
+            return response(['seller' => $seller], Response::HTTP_OK);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], Response::HTTP_BAD_REQUEST);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Erro interno'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function destroy(Seller $seller)
     {
+        $adm = User::where('role', 1)->first(); //temp
+        $seller->deleted_by = $adm->id;
+
+        $seller->save();
+        $seller->delete();
+
         return response()->noContent(Response::HTTP_OK);
     }
 }

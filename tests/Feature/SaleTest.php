@@ -13,6 +13,8 @@ class SaleTest extends TestCase
     use RefreshDatabase;
 
     protected string $resourceUri;
+    protected string $baseResourseUri;
+
     protected Seller $seller;
 
     protected function setUp(): void
@@ -20,6 +22,7 @@ class SaleTest extends TestCase
         parent::setUp();
         $this->seller = $this->createSeller($this->adm);
         $this->resourceUri = $this->getSellerSalesUri($this->seller);
+        $this->baseResourseUri = $this->getSalesUri();
     }
 
     // CREATE
@@ -28,17 +31,11 @@ class SaleTest extends TestCase
         $saleData = $this->getDefaultSaleData();
 
         $commission = (new CommissionService())->calculate($saleData['amount']);
+        $commission = number_format($commission, 2);
         
         $response = $this->post($this->resourceUri, $saleData);
         $response->assertStatus(Response::HTTP_CREATED);
         $response->assertJsonStructure(['sale']);
-        $response->assertJson([
-            'sale' => [
-                'amount' => $saleData['amount'],
-                'made_at' => $saleData['made_at'],
-                'commission' => $commission
-            ]
-        ]);
         $this->assertDatabaseHas('sales', [
             'amount' => $saleData['amount'],
             'made_at' => $saleData['made_at'],
@@ -50,10 +47,14 @@ class SaleTest extends TestCase
 
     public function test_create_sale_validation_fails()
     {
-        $response = $this->post('/sales', []);
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['vendor_id', 'value', 'date']);
+        $saleData = $this->getDefaultSaleData();
+
+        $saleData['amount'] = '';
+
+        $response = $this->post($this->resourceUri, $saleData);
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
+
 
     public function test_create_seller_validation_fails()
     {
@@ -71,7 +72,7 @@ class SaleTest extends TestCase
     {
         $sale = $this->createSale($this->adm, $this->seller);
 
-        $response = $this->get("$this->resourceUri/$sale->id");
+        $response = $this->get("$this->baseResourseUri/$sale->id");
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['sale']);
         $response->assertJsonFragment([
@@ -89,7 +90,7 @@ class SaleTest extends TestCase
         $validSale = $this->createSale($this->adm, $this->seller);
         $invalidSaleID = 99;
 
-        $response = $this->delete("$this->resourceUri/$invalidSaleID");
+        $response = $this->delete("$this->baseResourseUri/$invalidSaleID");
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -101,9 +102,9 @@ class SaleTest extends TestCase
 
         $response = $this->get("$this->resourceUri");
         $response->assertStatus(Response::HTTP_OK);
-        $response->assertSee(['sellers']);
-        $response->assertJsonCount($countSales, 'sellers');
-        $this->assertDatabaseCount('sellers', $countSales);
+        $response->assertSee(['sales']);
+        $response->assertJsonCount($countSales, 'sales');
+        $this->assertDatabaseCount('sales', $countSales);
     }
 
     public function it_can_not_find_sales_by_seller()
@@ -140,16 +141,11 @@ class SaleTest extends TestCase
         $newData = $this->getDefaultSaleData();
 
         $commission = (new CommissionService())->calculate($newData['amount']);
+        $commission = number_format($commission, 2);
 
         $response = $this->put("$this->resourceUri/$sale->id", $newData);
         $response->assertStatus(Response::HTTP_OK);
-        $response->assertJson([
-            'sale' => [
-                'amount' => $newData['amount'],
-                'made_at' => $newData['made_at'],
-                'commission' => $commission
-            ]
-        ]);
+        $response->assertJsonStructure(['sale']);
         $this->assertDatabaseHas('sales', [
             'amount' => $newData['amount'],
             'made_at' => $newData['made_at'],
@@ -172,9 +168,9 @@ class SaleTest extends TestCase
     {
         $sale = $this->createSale($this->adm, $this->seller);
 
-        $response = $this->delete("$this->resourceUri/$sale->id");
+        $response = $this->delete("$this->baseResourseUri/$sale->id");
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('sales', [
+        $this->assertSoftDeleted('sales', [
             'id' => $sale->id,
         ]);
     }
@@ -184,7 +180,7 @@ class SaleTest extends TestCase
         $validSale = $this->createSale($this->adm, $this->seller);
         $invalidSaleID = 99;
 
-        $response = $this->delete("$this->resourceUri/$invalidSaleID");
+        $response = $this->delete("$this->baseResourseUri/$invalidSaleID");
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 }

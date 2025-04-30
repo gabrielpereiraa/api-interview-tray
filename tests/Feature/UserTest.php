@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Tests\TestCase;
 
-class UserTest extends TestCase
+class SellerTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -22,6 +22,7 @@ class UserTest extends TestCase
     public function test_can_create_a_user()
     {
         $userData = $this->getDefaultUserData();
+        $countUsersWithAdmAndCreatedUser = 2;
 
         $response = $this->post($this->resourceUri, $userData);
         $response->assertStatus(Response::HTTP_CREATED);
@@ -30,7 +31,7 @@ class UserTest extends TestCase
             'name' => $userData['name'],
             'email' => $userData['email'],
         ]);
-        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('users', $countUsersWithAdmAndCreatedUser);
     }
 
     public function test_create_user_validation_fails()
@@ -51,7 +52,7 @@ class UserTest extends TestCase
         $userAlreadyExists = $this->createUser($userData);
 
         $response = $this->post($this->resourceUri, $userData);
-        $response->assertStatus(Response::HTTP_CONFLICT);
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     // SHOW
@@ -86,18 +87,21 @@ class UserTest extends TestCase
     public function test_can_list_all_users()
     {
         $countUsers = 10;
+        $countUsersWithAdm = $countUsers + 1;
         $this->createUsers($countUsers);
 
         $response = $this->get("$this->resourceUri");
         $response->assertStatus(Response::HTTP_OK);
         $response->assertSee(['users']);
-        $response->assertJsonCount($countUsers, 'users');
-        $this->assertDatabaseCount('users', $countUsers);
+        $response->assertJsonCount($countUsersWithAdm, 'users');
+        $this->assertDatabaseCount('users', $countUsersWithAdm);
     }
 
     public function test_can_filter_users_by_email()
     {   
         $countUsers = 10;
+        $countUsersWithAdmAndCreatedUser = $countUsers + 2;
+
         $this->createUsers($countUsers);
         $searchUser = $this->createUser();
 
@@ -113,29 +117,48 @@ class UserTest extends TestCase
             'name' => $searchUser->name,
             'email' => $searchUser->email,
         ]);
-        $this->assertDatabaseCount('users', $countUsers + 1);
+        $this->assertDatabaseCount('users', $countUsersWithAdmAndCreatedUser);
+    }
+
+    public function test_cannot_filter_users_by_invalid_email()
+    {   
+        $countUsers = 10;
+        $this->createUsers($countUsers);
+        $invalidEmail = '123';
+
+        $queryParam = "email=$invalidEmail";
+        $response = $this->get("$this->resourceUri?$queryParam");
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
+    }
+
+    public function test_cannot_filter_users_by_non_existent_email()
+    {   
+        $countUsers = 10;
+        $this->createUsers($countUsers);
+        $invalidEmail = fake()->email();
+
+        $queryParam = "email=$invalidEmail";
+        $response = $this->get("$this->resourceUri?$queryParam");
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
     // UPDATE
     public function test_can_update_a_user()
     {
         $user = $this->createUser();
-        $newData = [
-            'name' => fake()->name(),
-            'password' => fake()->password()
-        ];
+        $newData = $this->getDefaultUserData();
 
         $response = $this->put("$this->resourceUri/$user->id", $newData);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJson([
             'user' => [
                 'id' => $user->id,
-                'name' => $newData['name'],
+                'email' => $newData['email'],
             ]
         ]);
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
-            'name' => $newData['name'],
+            'email' => $newData['email'],
         ]);
     }
 
@@ -172,7 +195,7 @@ class UserTest extends TestCase
 
         $response = $this->delete("$this->resourceUri/$user->id");
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('users', [
+        $this->assertSoftDeleted('users', [
             'id' => $user->id,
         ]);
     }

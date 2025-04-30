@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Tests\TestCase;
 
-class SellersTest extends TestCase
+class SellerTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -50,7 +50,7 @@ class SellersTest extends TestCase
         $sellerAlreadyExists = $this->createSeller($this->adm, $sellerData);
 
         $response = $this->post($this->resourceUri, $sellerData);
-        $response->assertStatus(Response::HTTP_CONFLICT);
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
     // SHOW
@@ -124,13 +124,13 @@ class SellersTest extends TestCase
         $response = $this->put("$this->resourceUri/$seller->id", $newData);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJson([
-            'user' => [
+            'seller' => [
                 'id' => $seller->id,
                 'name' => $newData['name'],
                 'email' => $newData['email']
             ]
         ]);
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('sellers', [
             'id' => $seller->id,
             'name' => $newData['name'],
             'email' => $newData['email']
@@ -166,7 +166,7 @@ class SellersTest extends TestCase
 
         $response = $this->delete("$this->resourceUri/$seller->id");
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('sellers', [
+        $this->assertSoftDeleted('sellers', [
             'id' => $seller->id,
         ]);
     }
