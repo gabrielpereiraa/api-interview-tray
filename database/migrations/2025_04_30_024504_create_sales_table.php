@@ -16,7 +16,10 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->decimal('commission', 10, 2);
             $table->date('made_at');
+            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->timestamps();
+
+            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 
