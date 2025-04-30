@@ -28,4 +28,7 @@ docker-compose exec app php artisan db:seed --database=mysql
 echo "tests..."
 docker-compose exec app php artisan test
 
+echo "JWT Secret..."
+docker-compose exec app php artisan jwt:secret
+
 echo "Script finalizado!"
