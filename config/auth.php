@@ -36,9 +36,8 @@ return [
 
     'guards' => [
         'api' => [
-            'driver' => 'token',
-            'provider' => 'customers',
-            'hash' => false,
+            'driver' => 'jwt',
+            'provider' => 'users',
         ],
     ],
 
@@ -60,13 +59,17 @@ return [
     */
 
     'providers' => [
-        'customers' => [
+        'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Customer::class
+            'model' => App\Models\User::class,
         ],
-        'transactions' => [
+        'sellers' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Transaction::class
+            'model' => App\Models\Seller::class
+        ],
+        'sales' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Sale::class
         ]
     ],
 
