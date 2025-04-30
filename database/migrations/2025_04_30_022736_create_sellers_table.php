@@ -14,10 +14,10 @@ return new class extends Migration
 
             $table->string('name');
             $table->string('email')->unique();
-            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
-            
+            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
         });
     }

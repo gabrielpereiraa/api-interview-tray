@@ -19,7 +19,7 @@ class SaleFactory extends Factory
             'user_id' => User::factory(),
             'amount' => $randomAmount,
             'commission' => $commission,
-            'made_at' => $this->faker->date(),
+            'made_at' => $this->faker->dateTime(),
         ];
     }
 }
