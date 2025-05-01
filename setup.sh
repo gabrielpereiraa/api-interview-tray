@@ -15,6 +15,11 @@ docker-compose exec app php artisan key:generate
 docker-compose exec app php artisan key:generate --testing
 printf "\n"
 
+echo "fixing permissions..."
+docker-compose exec app chmod -R 775 storage bootstrap/cache
+docker-compose exec app chown -R www-data:www-data storage bootstrap/cache
+printf "\n"
+
 echo "waiting for MySQL container..."
 until docker-compose exec db mysql -uroot -proot -e "SELECT 1;" &> /dev/null
 do

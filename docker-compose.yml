@@ -33,8 +33,6 @@ services:
     environment:
       DB_HOST: db
       DB_CONNECTION: mysql
-    mem_limit: 512m
-    cpus: "0.5"      
 
   mailhog:
     image: mailhog/mailhog
