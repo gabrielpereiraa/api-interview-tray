@@ -9,7 +9,6 @@ use Illuminate\Validation\ValidationException;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class UserController extends Controller
 {
@@ -89,7 +88,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         try {
-            $this->authorize('delete', User::class);
+            $this->authorize('delete', $user);
             $adm = auth()->user();
             $user->deleted_by = $adm->id;
             $user->save();
