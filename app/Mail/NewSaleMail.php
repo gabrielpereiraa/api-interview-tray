@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\User;
+use App\Models\Seller;
+use App\Models\Sale;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class NewSaleMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public User $user;
+    public Seller $seller;
+    public Sale $sale;
+
+    public function __construct(User $user, Seller $seller, Sale $sale)
+    {
+        $this->user = $user;
+        $this->seller = $seller;
+        $this->$sale = $sale;
+    }
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Nova venda registrada'
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.new-sale',
+            with: [
+                'user' => $this->user,
+                'seller' => $this->seller,
+                'sale' => $this->sale,
+            ]
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [];
+    }
+}
