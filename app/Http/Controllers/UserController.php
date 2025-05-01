@@ -76,12 +76,10 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $adm = User::where('role', 1)->first(); //temp
-
+        $adm = auth()->user();
         $user->deleted_by = $adm->id;
         $user->save();
         $user->delete();
-
         return response()->noContent(Response::HTTP_OK);
     }
 }

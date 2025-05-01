@@ -23,7 +23,7 @@ class SellerTest extends TestCase
     {
         $sellerData = $this->getDefaultSellerData();
 
-        $response = $this->post($this->resourceUri, $sellerData);
+        $response = $this->post($this->resourceUri, $sellerData, $this->authHeader);
         $response->assertStatus(Response::HTTP_CREATED);
         $response->assertJsonStructure(['seller']);
         $this->assertDatabaseHas('sellers', [
@@ -40,7 +40,7 @@ class SellerTest extends TestCase
             'email' => ''
         ];
 
-        $response = $this->post($this->resourceUri, $sellerData);
+        $response = $this->post($this->resourceUri, $sellerData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -49,7 +49,7 @@ class SellerTest extends TestCase
         $sellerData = $this->getDefaultSellerData();
         $sellerAlreadyExists = $this->createSeller($this->adm, $sellerData);
 
-        $response = $this->post($this->resourceUri, $sellerData);
+        $response = $this->post($this->resourceUri, $sellerData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -58,7 +58,7 @@ class SellerTest extends TestCase
     {
         $seller = $this->createSeller($this->adm);
 
-        $response = $this->get("$this->resourceUri/$seller->id");
+        $response = $this->get("$this->resourceUri/$seller->id", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['seller']);
         $response->assertJsonFragment([
@@ -77,7 +77,7 @@ class SellerTest extends TestCase
         $validSeller = $this->createSeller($this->adm);
         $invalidSellerID = 99;
 
-        $response = $this->get("$this->resourceUri/$invalidSellerID");
+        $response = $this->get("$this->resourceUri/$invalidSellerID", $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -87,7 +87,7 @@ class SellerTest extends TestCase
         $countSellers = 10;
         $this->createSellers($this->adm, $countSellers);
 
-        $response = $this->get("$this->resourceUri");
+        $response = $this->get("$this->resourceUri", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertSee(['sellers']);
         $response->assertJsonCount($countSellers, 'sellers');
@@ -101,7 +101,7 @@ class SellerTest extends TestCase
         $searchSeller = $this->createSeller($this->adm);
 
         $queryParam = "email=$searchSeller->email";
-        $response = $this->get("$this->resourceUri?$queryParam");
+        $response = $this->get("$this->resourceUri?$queryParam", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['sellers']);
         $response->assertJsonFragment([
@@ -121,7 +121,7 @@ class SellerTest extends TestCase
         $seller = $this->createSeller($this->adm);
         $newData = $this->getDefaultSellerData();
 
-        $response = $this->put("$this->resourceUri/$seller->id", $newData);
+        $response = $this->put("$this->resourceUri/$seller->id", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJson([
             'seller' => [
@@ -143,7 +143,7 @@ class SellerTest extends TestCase
         $invalidSellerID = 99;
         $newData = $this->getDefaultSellerData();
 
-        $response = $this->put("$this->resourceUri/$invalidSellerID", $newData);
+        $response = $this->put("$this->resourceUri/$invalidSellerID", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -155,7 +155,7 @@ class SellerTest extends TestCase
             'email' => ''
         ];
 
-        $response = $this->put("$this->resourceUri/$seller->id", $newData);
+        $response = $this->put("$this->resourceUri/$seller->id", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -164,7 +164,7 @@ class SellerTest extends TestCase
     {
         $seller = $this->createSeller($this->adm);
 
-        $response = $this->delete("$this->resourceUri/$seller->id");
+        $response = $this->delete("$this->resourceUri/$seller->id", [], $this->authHeader);
         $response->assertStatus(200);
         $this->assertSoftDeleted('sellers', [
             'id' => $seller->id,
@@ -176,7 +176,7 @@ class SellerTest extends TestCase
         $validSeller = $this->createSeller($this->adm);
         $invalidSellerID = 99;
 
-        $response = $this->delete("$this->resourceUri/$invalidSellerID");
+        $response = $this->delete("$this->resourceUri/$invalidSellerID", [], $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 }

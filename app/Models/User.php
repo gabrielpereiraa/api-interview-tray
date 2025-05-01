@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Model
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory;
     use SoftDeletes;
@@ -24,18 +25,28 @@ class User extends Model
         'password',
     ];
 
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($user) {
-            if (!empty($user->password)) {
+            if (!empty($user->password) && Hash::needsRehash($user->password)) {
                 $user->password = Hash::make($user->password);
             }
         });
 
         static::updating(function ($user) {
-            if (!empty($user->password) && $user->isDirty('password')) {
+            if (!empty($user->password) && $user->isDirty('password') && Hash::needsRehash($user->password)) {
                 $user->password = Hash::make($user->password);
             }
         });

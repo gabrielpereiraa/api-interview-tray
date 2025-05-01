@@ -20,7 +20,7 @@ class SellerController extends Controller
     public function create(Request $request)
     {
         try {
-            $adm = User::where('role', 1)->first(); //temp
+            $adm = auth()->user();
 
             $request->merge(['created_by' => $adm->id]);
             $validatedData = $request->validate($this->rules);
@@ -69,7 +69,7 @@ class SellerController extends Controller
 
     public function destroy(Seller $seller)
     {
-        $adm = User::where('role', 1)->first(); //temp
+        $adm = auth()->user();
         $seller->deleted_by = $adm->id;
 
         $seller->save();

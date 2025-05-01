@@ -22,7 +22,6 @@ class SaleController extends Controller
 
     protected $commissionService;
 
-    // Injetar o serviço de comissão
     public function __construct(CommissionService $commissionService)
     {
         $this->commissionService = $commissionService;
@@ -31,7 +30,7 @@ class SaleController extends Controller
     public function create(Request $request, Seller $seller)
     {
         try {
-            $adm = User::where('role', 1)->first(); //temp
+            $adm = auth()->user();
 
             $request->merge([
                 'user_id' => $adm->id,
@@ -76,7 +75,7 @@ class SaleController extends Controller
     public function update(Request $request, Seller $seller, Sale $sale)
     {
         try {
-            $adm = User::where('role', 1)->first(); //temp
+            $adm = auth()->user(); //temp
 
             $request->merge([
                 'user_id' => $adm->id,
@@ -97,7 +96,7 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale)
     {
-        $adm = User::where('role', 1)->first(); //temp
+        $adm = auth()->user(); //temp
         $sale->deleted_by = $adm->id;
 
         $sale->save();

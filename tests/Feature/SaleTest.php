@@ -33,7 +33,7 @@ class SaleTest extends TestCase
         $commission = (new CommissionService())->calculate($saleData['amount']);
         $commission = number_format($commission, 2);
         
-        $response = $this->post($this->resourceUri, $saleData);
+        $response = $this->post($this->resourceUri, $saleData, $this->authHeader);
         $response->assertStatus(Response::HTTP_CREATED);
         $response->assertJsonStructure(['sale']);
         $this->assertDatabaseHas('sales', [
@@ -51,7 +51,7 @@ class SaleTest extends TestCase
 
         $saleData['amount'] = '';
 
-        $response = $this->post($this->resourceUri, $saleData);
+        $response = $this->post($this->resourceUri, $saleData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -63,7 +63,7 @@ class SaleTest extends TestCase
             'made_at' => ''
         ];
 
-        $response = $this->post($this->resourceUri, $saleData);
+        $response = $this->post($this->resourceUri, $saleData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -72,7 +72,7 @@ class SaleTest extends TestCase
     {
         $sale = $this->createSale($this->adm, $this->seller);
 
-        $response = $this->get("$this->baseResourseUri/$sale->id");
+        $response = $this->get("$this->baseResourseUri/$sale->id", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['sale']);
         $response->assertJsonFragment([
@@ -90,7 +90,7 @@ class SaleTest extends TestCase
         $validSale = $this->createSale($this->adm, $this->seller);
         $invalidSaleID = 99;
 
-        $response = $this->delete("$this->baseResourseUri/$invalidSaleID");
+        $response = $this->delete("$this->baseResourseUri/$invalidSaleID", [], $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -100,7 +100,7 @@ class SaleTest extends TestCase
         $countSales = 10;
         $this->createSales($this->adm, $this->seller, $countSales);
 
-        $response = $this->get("$this->resourceUri");
+        $response = $this->get("$this->resourceUri", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertSee(['sales']);
         $response->assertJsonCount($countSales, 'sales');
@@ -112,7 +112,7 @@ class SaleTest extends TestCase
         $newSeller = $this->createSeller($this->adm);
         $this->createSale($this->adm, $newSeller);
 
-        $response = $this->get("$this->resourceUri");
+        $response = $this->get("$this->resourceUri", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonCount(0, 'sales');
     }
@@ -127,7 +127,7 @@ class SaleTest extends TestCase
         $sale3 = $this->createSale($this->adm, $seller2);
 
         $this->resourceUri = $this->getSalesUri();
-        $response = $this->get("$this->resourceUri");
+        $response = $this->get("$this->resourceUri", $this->authHeader);
         $response->assertStatus(200);
         $response->assertJsonFragment(['id' => $sale1->id]);
         $response->assertJsonFragment(['id' => $sale2->id]);
@@ -143,7 +143,7 @@ class SaleTest extends TestCase
         $commission = (new CommissionService())->calculate($newData['amount']);
         $commission = number_format($commission, 2);
 
-        $response = $this->put("$this->resourceUri/$sale->id", $newData);
+        $response = $this->put("$this->resourceUri/$sale->id", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['sale']);
         $this->assertDatabaseHas('sales', [
@@ -159,7 +159,7 @@ class SaleTest extends TestCase
         $invalidSaleID = 99;
         $newData = $this->getDefaultSaleData();
 
-        $response = $this->put("$this->resourceUri/$invalidSaleID", $newData);
+        $response = $this->put("$this->resourceUri/$invalidSaleID", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -168,7 +168,7 @@ class SaleTest extends TestCase
     {
         $sale = $this->createSale($this->adm, $this->seller);
 
-        $response = $this->delete("$this->baseResourseUri/$sale->id");
+        $response = $this->delete("$this->baseResourseUri/$sale->id", [], $this->authHeader);
         $response->assertStatus(200);
         $this->assertSoftDeleted('sales', [
             'id' => $sale->id,
@@ -180,7 +180,7 @@ class SaleTest extends TestCase
         $validSale = $this->createSale($this->adm, $this->seller);
         $invalidSaleID = 99;
 
-        $response = $this->delete("$this->baseResourseUri/$invalidSaleID");
+        $response = $this->delete("$this->baseResourseUri/$invalidSaleID", [], $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Response;
 use Tests\TestCase;
 
-class SellerTest extends TestCase
+class UserTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -24,7 +24,7 @@ class SellerTest extends TestCase
         $userData = $this->getDefaultUserData();
         $countUsersWithAdmAndCreatedUser = 2;
 
-        $response = $this->post($this->resourceUri, $userData);
+        $response = $this->post($this->resourceUri, $userData, $this->authHeader);
         $response->assertStatus(Response::HTTP_CREATED);
         $response->assertJsonStructure(['user']);
         $this->assertDatabaseHas('users', [
@@ -42,7 +42,7 @@ class SellerTest extends TestCase
             'password' => ''
         ];
 
-        $response = $this->post($this->resourceUri, $userData);
+        $response = $this->post($this->resourceUri, $userData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -51,7 +51,7 @@ class SellerTest extends TestCase
         $userData = $this->getDefaultUserData();
         $userAlreadyExists = $this->createUser($userData);
 
-        $response = $this->post($this->resourceUri, $userData);
+        $response = $this->post($this->resourceUri, $userData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -60,7 +60,7 @@ class SellerTest extends TestCase
     {
         $user = $this->createUser();
 
-        $response = $this->get("$this->resourceUri/$user->id");
+        $response = $this->get("$this->resourceUri/$user->id", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['user']);
         $response->assertJsonFragment([
@@ -79,7 +79,7 @@ class SellerTest extends TestCase
         $validUser = $this->createUser();
         $invalidUserID = 99;
 
-        $response = $this->get("$this->resourceUri/$invalidUserID");
+        $response = $this->get("$this->resourceUri/$invalidUserID", $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -90,7 +90,7 @@ class SellerTest extends TestCase
         $countUsersWithAdm = $countUsers + 1;
         $this->createUsers($countUsers);
 
-        $response = $this->get("$this->resourceUri");
+        $response = $this->get("$this->resourceUri", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertSee(['users']);
         $response->assertJsonCount($countUsersWithAdm, 'users');
@@ -106,7 +106,7 @@ class SellerTest extends TestCase
         $searchUser = $this->createUser();
 
         $queryParam = "email=$searchUser->email";
-        $response = $this->get("$this->resourceUri?$queryParam");
+        $response = $this->get("$this->resourceUri?$queryParam", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure(['user']);
         $response->assertJsonFragment([
@@ -127,7 +127,7 @@ class SellerTest extends TestCase
         $invalidEmail = '123';
 
         $queryParam = "email=$invalidEmail";
-        $response = $this->get("$this->resourceUri?$queryParam");
+        $response = $this->get("$this->resourceUri?$queryParam", $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -138,7 +138,7 @@ class SellerTest extends TestCase
         $invalidEmail = fake()->email();
 
         $queryParam = "email=$invalidEmail";
-        $response = $this->get("$this->resourceUri?$queryParam");
+        $response = $this->get("$this->resourceUri?$queryParam", $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -148,7 +148,7 @@ class SellerTest extends TestCase
         $user = $this->createUser();
         $newData = $this->getDefaultUserData();
 
-        $response = $this->put("$this->resourceUri/$user->id", $newData);
+        $response = $this->put("$this->resourceUri/$user->id", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJson([
             'user' => [
@@ -172,7 +172,7 @@ class SellerTest extends TestCase
             'password' => fake()->password()
         ];
 
-        $response = $this->put("$this->resourceUri/$invalidUserID", $newData);
+        $response = $this->put("$this->resourceUri/$invalidUserID", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
@@ -184,7 +184,7 @@ class SellerTest extends TestCase
             'password' => ''
         ];
 
-        $response = $this->put("$this->resourceUri/$user->id", $newData);
+        $response = $this->put("$this->resourceUri/$user->id", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
     }
 
@@ -193,7 +193,7 @@ class SellerTest extends TestCase
     {
         $user = $this->createUser();
 
-        $response = $this->delete("$this->resourceUri/$user->id");
+        $response = $this->delete("$this->resourceUri/$user->id", [], $this->authHeader);
         $response->assertStatus(200);
         $this->assertSoftDeleted('users', [
             'id' => $user->id,
@@ -205,7 +205,7 @@ class SellerTest extends TestCase
         $validUser = $this->createUser();
         $invalidUserID = 99;
 
-        $response = $this->delete("$this->resourceUri/$invalidUserID");
+        $response = $this->delete("$this->resourceUri/$invalidUserID", [], $this->authHeader);
         $response->assertStatus(404);
     }
 }
