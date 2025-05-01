@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\UserRegisterService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserController extends Controller
 {
+    protected $registrationService;
 
     protected array $rules = [
         'name' => 'required|string',
@@ -19,13 +21,23 @@ class UserController extends Controller
         'password' => 'required|string|min:6',
     ];
 
+    protected array $updateRules = [
+        'name' => 'required|string',
+        'password' => 'nullable|string|min:6'
+    ];
+
+    public function __construct(UserRegisterService $registrationService)
+    {
+        $this->registrationService = $registrationService;
+    }
+
     public function create(Request $request)
     {
         try {
             $this->authorize('create', User::class);
 
             $validatedData = $request->validate($this->rules);
-            $createdUser = User::create($validatedData);
+            $createdUser = $this->registrationService->register($validatedData);
 
             return response(['user' => $createdUser], Response::HTTP_CREATED);
         } catch (ValidationException $e) {
@@ -33,7 +45,7 @@ class UserController extends Controller
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -56,7 +68,7 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -70,9 +82,7 @@ class UserController extends Controller
         try {
             $this->authorize('update', User::class);
 
-            $this->rules['password'] = 'nullable|string|min:6';
-
-            $validatedData = $request->validate($this->rules);
+            $validatedData = $request->validate($this->updateRules);
             $user->update($validatedData);
 
             return response(['user' => $user], Response::HTTP_OK);
@@ -81,7 +91,7 @@ class UserController extends Controller
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -97,7 +107,7 @@ class UserController extends Controller
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

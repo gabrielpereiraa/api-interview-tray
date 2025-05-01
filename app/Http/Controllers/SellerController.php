@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Seller;
 use App\Models\User;
+use App\Services\SellerRegisterService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -12,11 +13,22 @@ use Illuminate\Validation\ValidationException;
 
 class SellerController extends Controller
 {
+    protected $registrationService;
+
     protected array $rules = [
         'name' => 'required|string',
         'email' => 'required|string|email|unique:sellers',
         'created_by' => 'required|exists:users,id',
     ];
+
+    protected array $updateRules = [
+        'name' => 'required|string',
+    ];
+
+    public function __construct(SellerRegisterService $registrationService)
+    {
+        $this->registrationService = $registrationService;
+    }
 
     public function create(Request $request)
     {
@@ -26,15 +38,15 @@ class SellerController extends Controller
             $adm = auth()->user();
             $request->merge(['created_by' => $adm->id]);
             $validatedData = $request->validate($this->rules);
+            $newSeller = $this->registrationService->register($adm, $validatedData);
 
-            $createdSeller = Seller::create($validatedData);
-            return response(['seller' => $createdSeller], Response::HTTP_CREATED);
+            return response(['seller' => $newSeller], Response::HTTP_CREATED);
         } catch (ValidationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -60,8 +72,7 @@ class SellerController extends Controller
         try {
             $this->authorize('update', Seller::class);
             
-            unset($this->rules['created_by']);
-            $validatedData = $request->validate($this->rules);
+            $validatedData = $request->validate($this->updateRules);
             $seller->update($validatedData);
 
             return response(['seller' => $seller], Response::HTTP_OK);
@@ -70,7 +81,7 @@ class SellerController extends Controller
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -87,7 +98,7 @@ class SellerController extends Controller
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\Seller;
 use App\Models\User;
 use App\Services\CommissionService;
+use App\Services\SaleRegisterService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
+    protected $saleRegisterService;
+
     protected array $rules = [
         'user_id'     => 'required|exists:users,id',
         'seller_id'   => 'required|exists:sellers,id',
@@ -21,11 +24,14 @@ class SaleController extends Controller
         'made_at'     => 'required|date',
     ];
 
-    protected $commissionService;
+    protected array $updateRules = [
+        'amount'      => 'required|numeric|min:1',
+        'made_at'     => 'required|date',
+    ];
 
-    public function __construct(CommissionService $commissionService)
+    public function __construct(SaleRegisterService $saleRegisterService)
     {
-        $this->commissionService = $commissionService;
+        $this->saleRegisterService = $saleRegisterService;
     }
 
     public function create(Request $request, Seller $seller)
@@ -34,23 +40,21 @@ class SaleController extends Controller
             $this->authorize('create', Sale::class);
 
             $adm = auth()->user();
-
             $request->merge([
                 'user_id' => $adm->id,
                 'seller_id' => $seller->id
             ]);
 
             $validatedData = $request->validate($this->rules);
-            $validatedData['commission'] = $this->commissionService->calculate($validatedData['amount']);
+            $newSale = $this->saleRegisterService->register($adm, $seller, $validatedData);
 
-            $createdSale = Sale::create($validatedData);
-            return response(['sale' => $createdSale], Response::HTTP_CREATED);
+            return response(['sale' => $newSale], Response::HTTP_CREATED);
         } catch (ValidationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -89,17 +93,16 @@ class SaleController extends Controller
                 'seller_id' => $seller->id
             ]);
 
-            $validatedData = $request->validate($this->rules);
-            $validatedData['commission'] = $this->commissionService->calculate($validatedData['amount']);
+            $validatedData = $request->validate($this->updateRules);
+            $updatedSale = $this->saleRegisterService->update($adm, $seller, $sale, $validatedData);
 
-            $sale->update($validatedData);
-            return response(['sale' => $sale], Response::HTTP_OK);
+            return response(['sale' => $updatedSale], Response::HTTP_OK);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], Response::HTTP_BAD_REQUEST);
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Erro interno'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -109,14 +112,13 @@ class SaleController extends Controller
             $this->authorize('delete', Sale::class);
 
             $adm = auth()->user();
-            $sale->deleted_by = $adm->id;
-            $sale->save();
-            $sale->delete();
+            $this->saleRegisterService->delete($adm, $sale);
+            
             return response()->noContent(Response::HTTP_OK);
         } catch (AuthorizationException $e) {
             return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

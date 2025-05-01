@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
-class CommissionService
+use App\Contracts\CommissionServiceInterface;
+
+class CommissionService implements CommissionServiceInterface
 {    
     const TAX_COMMISSION = 8.5;
 
