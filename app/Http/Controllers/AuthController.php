@@ -29,7 +29,7 @@ class AuthController extends Controller
         } catch (JWTException $e) {
             return response()->noContent(Response::HTTP_UNAUTHORIZED);
         } catch (Exception $e) {
-            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

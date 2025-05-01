@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Tests\Helpers\SaleHelper;
 use Tests\Helpers\SellerHelper;
 use Tests\Helpers\UserHelper;
+use Illuminate\Support\Facades\Mail;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -22,6 +23,12 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        if (!app()->environment('testing')) {
+            exit("Invalid environment.");
+        }
+
+        Mail::fake();
         $this->adm = $this->createAdmUser();
 
         $token = app(AuthService::class)->generate($this->adm);

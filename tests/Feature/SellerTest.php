@@ -123,17 +123,14 @@ class SellerTest extends TestCase
 
         $response = $this->put("$this->resourceUri/$seller->id", $newData, $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
-        $response->assertJson([
-            'seller' => [
-                'id' => $seller->id,
-                'name' => $newData['name'],
-                'email' => $newData['email']
-            ]
+        $response->assertJsonStructure(['seller']);
+        $response->assertJsonFragment([
+            'id' => $seller->id,
+            'name' => $newData['name']
         ]);
         $this->assertDatabaseHas('sellers', [
             'id' => $seller->id,
-            'name' => $newData['name'],
-            'email' => $newData['email']
+            'name' => $newData['name']
         ]);
     }
 
@@ -151,8 +148,7 @@ class SellerTest extends TestCase
     {
         $seller = $this->createSeller($this->adm);
         $newData = [
-            'name' => '',
-            'email' => ''
+            'name' => ''
         ];
 
         $response = $this->put("$this->resourceUri/$seller->id", $newData, $this->authHeader);

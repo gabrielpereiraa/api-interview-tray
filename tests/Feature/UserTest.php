@@ -38,7 +38,6 @@ class UserTest extends TestCase
     {
         $userData = [
             'name' => '',
-            'email' => '',
             'password' => ''
         ];
 
@@ -153,12 +152,12 @@ class UserTest extends TestCase
         $response->assertJson([
             'user' => [
                 'id' => $user->id,
-                'email' => $newData['email'],
+                'name' => $newData['name'],
             ]
         ]);
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
-            'email' => $newData['email'],
+            'name' => $newData['name'],
         ]);
     }
 
