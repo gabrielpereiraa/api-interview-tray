@@ -7,6 +7,7 @@ use App\Models\Seller;
 use App\Models\User;
 use App\Services\CommissionService;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
@@ -30,6 +31,8 @@ class SaleController extends Controller
     public function create(Request $request, Seller $seller)
     {
         try {
+            $this->authorize('create', Sale::class);
+
             $adm = auth()->user();
 
             $request->merge([
@@ -44,6 +47,8 @@ class SaleController extends Controller
             return response(['sale' => $createdSale], Response::HTTP_CREATED);
         } catch (ValidationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
+        } catch (AuthorizationException $e) {
+            return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
             return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -75,7 +80,9 @@ class SaleController extends Controller
     public function update(Request $request, Seller $seller, Sale $sale)
     {
         try {
-            $adm = auth()->user(); //temp
+            $this->authorize('update', Sale::class);
+
+            $adm = auth()->user();
 
             $request->merge([
                 'user_id' => $adm->id,
@@ -89,6 +96,8 @@ class SaleController extends Controller
             return response(['sale' => $sale], Response::HTTP_OK);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], Response::HTTP_BAD_REQUEST);
+        } catch (AuthorizationException $e) {
+            return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
             return response()->json(['error' => 'Erro interno'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -96,12 +105,18 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale)
     {
-        $adm = auth()->user(); //temp
-        $sale->deleted_by = $adm->id;
+        try {
+            $this->authorize('delete', Sale::class);
 
-        $sale->save();
-        $sale->delete();
-
-        return response()->noContent(Response::HTTP_OK);
+            $adm = auth()->user();
+            $sale->deleted_by = $adm->id;
+            $sale->save();
+            $sale->delete();
+            return response()->noContent(Response::HTTP_OK);
+        } catch (AuthorizationException $e) {
+            return response()->noContent(Response::HTTP_FORBIDDEN);
+        } catch (Exception $e) {
+            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

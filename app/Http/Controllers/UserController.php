@@ -7,10 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class UserController extends Controller
 {
+
     protected array $rules = [
         'name' => 'required|string',
         'email' => 'required|string|email|unique:users',
@@ -20,12 +23,16 @@ class UserController extends Controller
     public function create(Request $request)
     {
         try {
+            $this->authorize('create', User::class);
+
             $validatedData = $request->validate($this->rules);
             $createdUser = User::create($validatedData);
 
             return response(['user' => $createdUser], Response::HTTP_CREATED);
         } catch (ValidationException $e) {
             return response()->noContent(Response::HTTP_BAD_REQUEST);
+        } catch (AuthorizationException $e) {
+            return response()->noContent(Response::HTTP_FORBIDDEN);
         } catch (Exception $e) {
             return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -62,13 +69,18 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         try {
+            $this->authorize('update', User::class);
+
             $this->rules['password'] = 'nullable|string|min:6';
 
             $validatedData = $request->validate($this->rules);
             $user->update($validatedData);
+
             return response(['user' => $user], Response::HTTP_OK);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], Response::HTTP_BAD_REQUEST);
+        } catch (AuthorizationException $e) {
+            return response()->noContent(Response::HTTP_BAD_REQUEST);
         } catch (Exception $e) {
             return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -76,10 +88,17 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $adm = auth()->user();
-        $user->deleted_by = $adm->id;
-        $user->save();
-        $user->delete();
-        return response()->noContent(Response::HTTP_OK);
+        try {
+            $this->authorize('delete', User::class);
+            $adm = auth()->user();
+            $user->deleted_by = $adm->id;
+            $user->save();
+            $user->delete();
+            return response()->noContent(Response::HTTP_OK);
+        } catch (AuthorizationException $e) {
+            return response()->noContent(Response::HTTP_BAD_REQUEST);
+        } catch (Exception $e) {
+            return response()->noContent(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

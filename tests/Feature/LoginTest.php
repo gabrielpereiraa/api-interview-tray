@@ -18,9 +18,9 @@ class AuthControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->loginUri = '/api/login';
-        $this->meUri = '/api/me';
-        $this->logoutUri = '/api/logout';
+        $this->loginUri = '/login';
+        $this->meUri = '/me';
+        $this->logoutUri = '/logout';
     }
 
     public function test_can_login_and_receive_token()
