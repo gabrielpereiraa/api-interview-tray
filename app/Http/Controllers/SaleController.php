@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\CacheKeys;
 use App\Models\Sale;
 use App\Models\Seller;
 use App\Models\User;
 use App\Services\CommissionService;
+use App\Services\RedisCacheService;
 use App\Services\SaleRegisterService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -16,6 +18,7 @@ use Illuminate\Validation\ValidationException;
 class SaleController extends Controller
 {
     protected $saleRegisterService;
+    protected $cacheService;
 
     protected array $rules = [
         'user_id'     => 'required|exists:users,id',
@@ -29,9 +32,10 @@ class SaleController extends Controller
         'made_at'     => 'required|date',
     ];
 
-    public function __construct(SaleRegisterService $saleRegisterService)
+    public function __construct(SaleRegisterService $saleRegisterService, RedisCacheService $cacheService)
     {
         $this->saleRegisterService = $saleRegisterService;
+        $this->cacheService = $cacheService;
     }
 
     public function create(Request $request, Seller $seller)
@@ -60,8 +64,15 @@ class SaleController extends Controller
 
     public function index()
     {
-        $allSale = Sale::all();
-        return response(['sales' => $allSale], Response::HTTP_OK);
+        $cacheKey = CacheKeys::ALL_SALES;
+        $allSales = $this->cacheService->get($cacheKey);
+
+        if (!$allSales) {
+            $allSales = Sale::all()->toArray();
+            $this->cacheService->store($cacheKey, $allSales, 10);
+        }
+
+        return response(['sales' => $allSales], Response::HTTP_OK);
     }
 
     public function indexBySeller(Seller $seller)

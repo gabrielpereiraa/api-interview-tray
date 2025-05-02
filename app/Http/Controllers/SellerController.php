@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\CacheKeys;
 use App\Models\Seller;
 use App\Models\User;
+use App\Services\RedisCacheService;
 use App\Services\SellerRegisterService;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -14,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 class SellerController extends Controller
 {
     protected $registrationService;
+    protected $cacheService;
 
     protected array $rules = [
         'name' => 'required|string',
@@ -25,9 +28,10 @@ class SellerController extends Controller
         'name' => 'required|string',
     ];
 
-    public function __construct(SellerRegisterService $registrationService)
+    public function __construct(SellerRegisterService $registrationService, RedisCacheService $cacheService)
     {
         $this->registrationService = $registrationService;
+        $this->cacheService = $cacheService;
     }
 
     public function create(Request $request)
@@ -50,9 +54,16 @@ class SellerController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $allSellers = Seller::all();
+        $cacheKey = CacheKeys::ALL_SELLERS;
+        $allSellers = $this->cacheService->get($cacheKey);
+
+        if (!$allSellers) {
+            $allSellers = Seller::all()->toArray();
+            $this->cacheService->store($cacheKey, $allSellers, 10);
+        }
+
         return response(['sellers' => $allSellers], Response::HTTP_OK);
     }
 

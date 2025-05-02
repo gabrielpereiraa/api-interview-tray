@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\CacheKeys;
 use App\Models\User;
+use App\Services\RedisCacheService;
 use App\Services\UserRegisterService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class UserController extends Controller
 {
     protected $registrationService;
+    protected $cacheService;
 
     protected array $rules = [
         'name' => 'required|string',
@@ -26,9 +29,10 @@ class UserController extends Controller
         'password' => 'nullable|string|min:6'
     ];
 
-    public function __construct(UserRegisterService $registrationService)
+    public function __construct(UserRegisterService $registrationService, RedisCacheService $cacheService)
     {
         $this->registrationService = $registrationService;
+        $this->cacheService = $cacheService;
     }
 
     public function create(Request $request)
@@ -60,8 +64,15 @@ class UserController extends Controller
                 $user = User::where('email', $validatedData['email'])->firstOrFail();
                 return response(['user' => $user], Response::HTTP_OK);
             }
+            
+            $cacheKey = CacheKeys::ALL_USERS;
+            $allUsers = $this->cacheService->get($cacheKey);
+
+            if (!$allUsers) {
+                $allUsers = User::all();
+                $this->cacheService->store($cacheKey, $allUsers, 10);
+            }
     
-            $allUsers = User::all();
             return response(['users' => $allUsers], Response::HTTP_OK);
         } catch (ModelNotFoundException $e) {
             return response()->noContent(Response::HTTP_NOT_FOUND);

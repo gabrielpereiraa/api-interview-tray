@@ -8,12 +8,14 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthService
 {
+    public function __construct() { }
+
     private function returnToken($token): array
     {
         return [
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60
+            'expires_in' => JWTAuth::factory()->getTTL()
         ];
     }
 
@@ -27,11 +29,14 @@ class AuthService
     public function validateToken(): bool
     {
         $user = JWTAuth::parseToken()->authenticate();
-        if (!$user) throw new JWTException('Invalid JWT;');
+        if (!$user) {
+            throw new JWTException('Invalid JWT.');
+        }
+
         return true;
     }
 
-    public function generate(User $user)
+    public function generate(User $user): array
     {
         $token = JWTAuth::fromUser($user);
         return $this->returnToken($token);
@@ -39,7 +44,8 @@ class AuthService
 
     public function logout(): bool
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
+        $token = JWTAuth::getToken();
+        JWTAuth::invalidate($token);
         return true;
     }
 }
