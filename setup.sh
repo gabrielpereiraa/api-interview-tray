@@ -12,7 +12,6 @@ printf "\n"
 
 echo "APP Key..."
 docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan key:generate --testing
 printf "\n"
 
 echo "fixing permissions..."

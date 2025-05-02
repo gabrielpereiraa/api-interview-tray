@@ -9,6 +9,7 @@ use Tests\Helpers\SaleHelper;
 use Tests\Helpers\SellerHelper;
 use Tests\Helpers\UserHelper;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -29,6 +30,8 @@ abstract class TestCase extends BaseTestCase
         }
 
         Mail::fake();
+        Cache::flush();
+
         $this->adm = $this->createAdmUser();
 
         $token = app(AuthService::class)->generate($this->adm);
