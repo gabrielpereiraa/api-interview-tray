@@ -3,7 +3,7 @@ Clone o repositório e execute o script de inicialização:
 
 ```bash
 git clone https://github.com/gabrielpereiraa/api-interview-tray.git
-cd /api-interview-tray
+cd ./api-interview-tray
 chmod +x start.sh
 ./setup.sh
 ```
