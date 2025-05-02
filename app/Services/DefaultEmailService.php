@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\EmailServiceInterface;
 use App\Mail\NewSaleMail;
+use App\Mail\UpdatedSaleMail;
 use App\Mail\WelcomeMail;
 use App\Mail\WelcomeSellerMail;
 use App\Models\Sale;
@@ -30,6 +31,6 @@ class DefaultEmailService implements EmailServiceInterface
 
     public function sendUpdatedSaleEmail(User $user, Seller $seller, Sale $oldSale, Sale $sale): void
     {
-        Mail::to($seller->email)->send(new WelcomeMail($user, $seller, $oldSale, $sale));
+        Mail::to($seller->email)->send(new UpdatedSaleMail($user, $seller, $oldSale, $sale));
     }
 }

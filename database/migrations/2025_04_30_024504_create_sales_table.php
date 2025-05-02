@@ -15,7 +15,7 @@ return new class extends Migration
 
             $table->decimal('amount', 10, 2);
             $table->decimal('commission', 10, 2);
-            $table->date('made_at');
+            $table->dateTime('made_at');
             $table->timestamps();
             $table->softDeletes();
 

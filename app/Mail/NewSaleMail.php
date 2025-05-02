@@ -23,7 +23,7 @@ class NewSaleMail extends Mailable
     {
         $this->user = $user;
         $this->seller = $seller;
-        $this->$sale = $sale;
+        $this->sale = $sale;
     }
 
     public function envelope(): Envelope

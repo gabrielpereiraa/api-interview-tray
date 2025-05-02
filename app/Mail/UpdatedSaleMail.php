@@ -24,8 +24,8 @@ class UpdatedSaleMail extends Mailable
     {
         $this->user = $user;
         $this->seller = $seller;
-        $this->$oldSale = $oldSale;
-        $this->$sale = $sale;
+        $this->oldSale = $oldSale;
+        $this->sale = $sale;
     }
 
     public function envelope(): Envelope

@@ -22,18 +22,18 @@
                 <tbody>
                     <tr>
                         <td>Valor</td>
-                        <td>{{ $oldSale->amount }}</td>
-                        <td>{{ $sale->amount }}</td>
+                        <td>{{ $oldSale->amount_formatted }}</td>
+                        <td>{{ $sale->amount_formatted }}</td>
                     </tr>
                     <tr>
                         <td>Comissão</td>
-                        <td>{{ $oldSale->commission }}</td>
-                        <td>{{ $sale->commission }}</td>
+                        <td>{{ $oldSale->commission_formatted }}</td>
+                        <td>{{ $sale->commission_formatted }}</td>
                     </tr>
                     <tr>
                         <td>Realizada em</td>
-                        <td>{{ $oldSale->made_at }}</td>
-                        <td>{{ $sale->made_at }}</td>
+                        <td>{{ $oldSale->made_at_formatted }}</td>
+                        <td>{{ $sale->made_at_formatted }}</td>
                     </tr>
                 </tbody>
             </table>

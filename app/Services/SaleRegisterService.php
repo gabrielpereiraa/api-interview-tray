@@ -30,7 +30,7 @@ class SaleRegisterService
     public function update(User $user, Seller $seller, Sale $sale, array $data): Sale
     {
         $data['commission'] = $this->commissionService->calculate($data['amount']);
-        $oldSale = $sale;
+        $oldSale = $sale->replicate();
         $sale->update($data);
         $this->emailService->sendUpdatedSaleEmail($user, $seller, $oldSale, $sale);
         return $sale;

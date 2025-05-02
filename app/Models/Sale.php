@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ class Sale extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'commission' => 'decimal:2',
-        'made_at' => 'date'
+        'made_at' => 'datetime'
     ];
 
     public function seller(): BelongsTo
@@ -34,5 +35,20 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getMadeAtFormattedAttribute()
+    {
+        return Carbon::parse($this->made_at)->format('d/m/Y H:i');
+    }
+
+    public function getAmountFormattedAttribute()
+    {
+        return number_format($this->amount, 2, ',', '.');
+    }
+
+    public function getCommissionFormattedAttribute()
+    {
+        return number_format($this->commission, 2, ',', '.');
     }
 }
