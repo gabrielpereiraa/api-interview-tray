@@ -16,21 +16,21 @@ class DefaultEmailService implements EmailServiceInterface
 {
     public function sendWelcomeEmail(User $user): void
     {   
-        Mail::to($user->email)->send(new WelcomeMail($user));
+        Mail::to($user->email)->queue(new WelcomeMail($user));
     }
 
     public function sendWelcomeSellerEmail(User $user, Seller $seller): void
     {
-        Mail::to($seller->email)->send(new WelcomeSellerMail($user, $seller));
+        Mail::to($seller->email)->queue(new WelcomeSellerMail($user, $seller));
     }
 
     public function sendNewSaleEmail(User $user, Seller $seller, Sale $sale): void
     {
-        Mail::to($seller->email)->send(new NewSaleMail($user, $seller, $sale));
+        Mail::to($seller->email)->queue(new NewSaleMail($user, $seller, $sale));
     }
 
     public function sendUpdatedSaleEmail(User $user, Seller $seller, Sale $oldSale, Sale $sale): void
     {
-        Mail::to($seller->email)->send(new UpdatedSaleMail($user, $seller, $oldSale, $sale));
+        Mail::to($seller->email)->queue(new UpdatedSaleMail($user, $seller, $oldSale, $sale));
     }
 }

@@ -40,6 +40,7 @@ class SellerController extends Controller
             $this->authorize('create', Seller::class);
 
             $adm = auth()->user();
+
             $request->merge(['created_by' => $adm->id]);
             $validatedData = $request->validate($this->rules);
             $newSeller = $this->registrationService->register($adm, $validatedData);
@@ -56,6 +57,15 @@ class SellerController extends Controller
 
     public function index(Request $request)
     {
+        $validatedData = $request->validate([
+            'email' => 'nullable|email',
+        ]);
+
+        if (isset($validatedData['email'])) {
+            $seller = Seller::where('email', $validatedData['email'])->firstOrFail();
+            return response(['seller' => $seller], Response::HTTP_OK);
+        }
+
         $cacheKey = CacheKeys::ALL_SELLERS;
         $allSellers = $this->cacheService->get($cacheKey);
 

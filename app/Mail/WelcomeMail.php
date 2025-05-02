@@ -2,19 +2,14 @@
 
 namespace App\Mail;
 
+use App\Mail\BaseMail;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class WelcomeMail extends Mailable
+class WelcomeMail extends BaseMail
 {
-    use Queueable, SerializesModels;
-
-    public $user;
+    public User $user;
 
     public function __construct(User $user)
     {

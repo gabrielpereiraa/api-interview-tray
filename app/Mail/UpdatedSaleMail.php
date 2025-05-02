@@ -2,19 +2,15 @@
 
 namespace App\Mail;
 
+use App\Mail\BaseMail;
 use App\Models\User;
 use App\Models\Seller;
 use App\Models\Sale;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class UpdatedSaleMail extends Mailable
+class UpdatedSaleMail extends BaseMail
 {
-    use Queueable, SerializesModels;
-
     public User $user;
     public Seller $seller;
     public Sale $oldSale;

@@ -103,7 +103,7 @@ class SellerTest extends TestCase
         $queryParam = "email=$searchSeller->email";
         $response = $this->get("$this->resourceUri?$queryParam", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
-        $response->assertJsonStructure(['sellers']);
+        $response->assertJsonStructure(['seller']);
         $response->assertJsonFragment([
             'id' => $searchSeller->id,
             'email' => $searchSeller->email
