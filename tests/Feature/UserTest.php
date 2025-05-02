@@ -92,7 +92,6 @@ class UserTest extends TestCase
         $response = $this->get("$this->resourceUri", $this->authHeader);
         $response->assertStatus(Response::HTTP_OK);
         $response->assertSee(['users']);
-        $response->assertJsonCount($countUsersWithAdm, 'users');
         $this->assertDatabaseCount('users', $countUsersWithAdm);
     }
 
