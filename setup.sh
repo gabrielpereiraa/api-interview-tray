@@ -10,6 +10,10 @@ echo "mounting app and db containers..."
 docker-compose up -d --build
 printf "\n"
 
+echo "composer PHP..."
+docker-compose exec app composer install
+printf "\n"
+
 echo "APP Key..."
 docker-compose exec app php artisan key:generate
 printf "\n"
