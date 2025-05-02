@@ -69,7 +69,7 @@ class UserController extends Controller
             $allUsers = $this->cacheService->get($cacheKey);
 
             if (!$allUsers) {
-                $allUsers = User::all();
+                $allUsers = User::where('id', '!=', auth()->user()->id)->get();
                 $this->cacheService->store($cacheKey, $allUsers, 10);
             }
     

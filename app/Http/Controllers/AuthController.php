@@ -40,8 +40,14 @@ class AuthController extends Controller
 
     public function logout()
     {
-        $user = auth()->user();
-        $this->authService->logout();
-        return response()->json(['message' => 'Successfully logged out'], Response::HTTP_OK);
+        try {
+            $user = auth()->user();
+            $this->authService->logout();
+            return response()->json(['message' => 'Successfully logged out'], Response::HTTP_OK);
+        } catch (JWTException $e) {
+            return response()->noContent(Response::HTTP_UNAUTHORIZED);
+        } catch (Exception $e) {
+            return response(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

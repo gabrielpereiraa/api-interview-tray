@@ -8,7 +8,8 @@ class Kernel extends HttpKernel
 {
     protected $middleware = [
         \Illuminate\Http\Middleware\HandleCors::class,
-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class
+        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+        \App\Http\Middleware\Cors::class
     ];
 
     protected $middlewareGroups = [

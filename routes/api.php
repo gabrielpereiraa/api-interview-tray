@@ -53,4 +53,10 @@ Route::middleware(['auth:api'])->group(function () {
     });
 });
 
+Route::options('/{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization, X-Company, X-Csrf-Token, Access-Control-Allow-Origin');
+})->where('any', '.*');
 

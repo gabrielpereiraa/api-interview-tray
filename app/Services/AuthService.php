@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Exception;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -44,8 +45,12 @@ class AuthService
 
     public function logout(): bool
     {
-        $token = JWTAuth::getToken();
-        JWTAuth::invalidate($token);
-        return true;
+        try {
+            $token = JWTAuth::getToken();
+            JWTAuth::invalidate($token);
+            return true;
+        } catch(Exception $e) {
+            throw new JWTException('Invalid JWT.');
+        }
     }
 }
